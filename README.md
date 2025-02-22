@@ -1,0 +1,85 @@
+# Shamzam
+
+This project was created to complete the coursework assigned to me under the module, Enterprise Computing (ECM3408), for my final year at The University of Exeter.
+
+## Specificaiton
+
+### Project Brief
+
+*Shazam is a service that can identify a music tracks from music fragments, provided that the music track is present in the system’s database. The service was launched in the UK as “2580,” the short code that customers dialled on their mobile phone to get a music fragment recognized. Originally, the customer sent a text message containing a music fragment, and was sent back a text message containing music track title and artist name. Later, the service allowed the music track to be downloaded too.*
+
+**Build a Shazam-like MVP called Shamzam using some microservices.**
+
+### Requirements
+
+The following user cases must be satisfied:
+
+* **S1** As an administrator, I want to add a music track to the catalogue, so that a user can listen to it.
+* **S2** As an administrator, I want to remove a music track from the catalogue, so that a user cannot listen to it.
+* **S3** As an administrator, I want to list the names of the music tracks in the catalogue, so that I know what it contains.
+* **S4** As a user, I want to convert a music fragment to a music track in the catalogue, so that I can listen to it.
+
+The following implementation requirements must be satisfied:
+
+1. Python
+2. REST API
+3. SQLite database
+4. Audd.io for audio recognition
+5. Unit Testing
+
+## Workflow
+
+| Requirement ID | Description                      | Status      |
+| -------------- | -------------------------------- | ----------- |
+| P1             | Define project architecture      | Complete    |
+| P2             | Set up development environment   | Complete    |
+| P3             | Create endpoint diagrams         | Not Started |
+| P4             | Design database schemas (SQLite) | Not Started |
+| D1             | Implement S1 endpoint (POST)     | Not Started |
+| D2             | Implement S2 endpoint (DELETE)   | Not Started |
+| D3             | Implement S3 endpoint (GET)      | Not Started |
+| D4             | Implement S4 endpoint (POST)     | Not Started |
+| D5             | Implement database connection    | Not Started |
+| D6             | Develop API layer                | Not Started |
+| D7             | Dockerise (Docker)               | Not Started |
+| UT1            | Test D1 implementation           | Not Started |
+| UT3            | Test D2 implementation          | Not Started |
+| UT3            | Test D3 implementation          | Not Started |
+| UT4            | Test D4 implementation          | Not Started |
+| UT5            | Test D5 implementation           | Not Started |
+| E2ET1          | Test happy administrator         | Not Started |
+| E2ET2          | Test unhappy administrator      | Not Started |
+| E2ET3          | Test happy user                  | Not Started |
+| E2ET4          | Test unhappy user               | Not Started |
+| DP1            | Deploy & Submit                  | Not Started |
+
+## Architecture
+
+### Stack
+
+* Python ([requirements](requirements.txt))
+* Flask
+* SQLite
+* Audd.io API
+* Docker
+
+### Project Structure (Pre-Dockerisation)
+
+Seperate Flask implementations for each microservice, catalogue and lookup. Catalogue satisfies S1, S2 and S3, and lookup satisfies S4. Gateway provides a single entry point for both microservices.
+
+```
+.
+├── db
+│   └── database file
+├── microservices
+│   ├── catalogue
+│   │   └── flask implementation
+│   └── lookup
+│       └── flask implementation
+├── gateway
+│   └── flask implementation
+├── .env
+├── .gitignore
+├── README.md
+└── requirements.txt
+```
