@@ -88,7 +88,27 @@ class CatalogueController:
         return {'message': 'Track removed successfully'}, 200
     
     def list_tracks(self):
-        # TODO: Database connection: Get all tracks from database
-        tracks = [{'id': i, 'name': f'Track {i}', 'artist': f'Artist {i}', 'album': f'Album {i}', f'genre': f'Genre {i}', 'duration': i*100} for i in range(5)]
+        load_dotenv()
+        DATABASE_PATH = os.getenv('DATABASE_PATH')
         
-        return {'tracks': tracks}, 200
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM tracks')
+        tracks = cursor.fetchall()
+        conn.close()
+        
+        track_list = [
+            {
+                'id': track[0],
+                'name': track[1],
+                'artist': track[2],
+                'album': track[3],
+                'genre': track[4],
+                'duration': track[5],
+                'created_at': track[6]
+            }
+            for track in tracks
+        ]
+        
+        return {'tracks': track_list}, 200
