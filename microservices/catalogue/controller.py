@@ -68,9 +68,23 @@ class CatalogueController:
         if not id: return {'error': 'Track not specified'}, 400
         if not id.isdigit(): return {'error': 'Invalid track id'}, 400
         
-        # TODO: Check if track exists in database
+        load_dotenv()
+        DATABASE_PATH = os.getenv('DATABASE_PATH')
         
-        # TODO: Database connection: Remove track from database
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM tracks WHERE id = ?', (id,))
+        track = cursor.fetchone()
+        
+        if not track:
+            conn.close()
+            return {'error': 'Track not found'}, 404
+        
+        cursor.execute('DELETE FROM tracks WHERE id = ?', (id,))
+        conn.commit()
+        conn.close()
+        
         return {'message': 'Track removed successfully'}, 200
     
     def list_tracks(self):
