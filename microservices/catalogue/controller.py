@@ -1,3 +1,10 @@
+import datetime
+import os
+import sqlite3
+
+from dotenv import load_dotenv
+
+
 class CatalogueController:
     def add_track(self, request):
         required_fields = {'name', 'artist', 'album', 'genre', 'duration'}
@@ -7,8 +14,20 @@ class CatalogueController:
         if not all(field in request for field in required_fields):
             return {'error': 'Missing required fields'}, 400
         
-        # TODO: Database connection: Insert track into database
-        track_id = 0
+        load_dotenv()
+        DATABASE_PATH = os.getenv('DATABASE_PATH')
+        
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO tracks (name, artist, album, genre, duration, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (request['name'], request['artist'], request['album'], request['genre'], request['duration'], datetime.datetime.now()))
+        
+        track_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
         
         return {'message': 'Track added successfully', 'track_id': track_id}, 201
     
