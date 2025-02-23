@@ -105,3 +105,69 @@ Seperate Flask implementations for each microservice, catalogue and lookup. Cata
 ### Lookup: Convert Fragment
 
 ![image](./design/lookup-convert-fragment.drawio.svg "Lookup: Convert Fragment")
+
+## Database Schema
+
+### **Tracks Table**
+
+| Column Name | Data Type | Constraints                           |
+| ----------- | --------- | ------------------------------------- |
+| id          | INTEGER   | PRIMARY KEY, AUTOINCREMENT            |
+| name        | TEXT      | NOT NULL, UNIQUE                      |
+| artist      | TEXT      | NOT NULL                              |
+| album       | TEXT      | NULLABLE                              |
+| genre       | TEXT      | NULLABLE                              |
+| duration    | INTEGER   | NOT NULL (seconds)                    |
+| file_path   | TEXT      | NOT NULL (location of the music file) |
+| created_at  | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP             |
+
+### Fragments **Table**
+
+| Column Name | Data Type | Constraints                                |
+| ----------- | --------- | ------------------------------------------ |
+| id          | INTEGER   | PRIMARY KEY, AUTOINCREMENT                 |
+| fragment    | TEXT      | NOT NULL (file path of the fragment)       |
+| user_id     | INTEGER   | NULLABLE (if user authentication is added) |
+| created_at  | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP                  |
+
+### Conversions **Table**
+
+| Column Name | Data Type | Constraints                                                              |
+| ----------- | --------- | ------------------------------------------------------------------------ |
+| id          | INTEGER   | PRIMARY KEY, AUTOINCREMENT                                               |
+| fragment_id | INTEGER   | FOREIGN KEY REFERENCES `<span>fragments(id)</span>`, ON DELETE CASCADE |
+| track_id    | INTEGER   | FOREIGN KEY REFERENCES `<span>tracks(id)</span>`, ON DELETE CASCADE    |
+| confidence  | REAL      | NOT NULL (match confidence score)                                        |
+| created_at  | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP                                                |
+
+### SQL
+
+```sql
+CREATE TABLE tracks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    artist TEXT NOT NULL,
+    album TEXT,
+    genre TEXT,
+    duration INTEGER NOT NULL,
+    file_path TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE fragments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fragment TEXT NOT NULL,
+    user_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE conversions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fragment_id INTEGER NOT NULL,
+    track_id INTEGER NOT NULL,
+    confidence REAL NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON DELETE CASCADE,
+    FOREIGN KEY (track_id) REFERENCES tracks(id) ON DELETE CASCADE
+);
+```
