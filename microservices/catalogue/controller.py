@@ -20,5 +20,11 @@ class CatalogueController:
         
         # TODO: Check if track exists in database
         
-        #TODO: Database connection: Remove track from database
+        # TODO: Database connection: Remove track from database
         return {'message': 'Track removed successfully'}, 200
+    
+    def list_tracks(self):
+        # TODO: Database connection: Get all tracks from database
+        tracks = [{'id': i, 'name': f'Track {i}', 'artist': f'Artist {i}', 'album': f'Album {i}', f'genre': f'Genre {i}', 'duration': i*100} for i in range(5)]
+        
+        return {'tracks': tracks}, 200
