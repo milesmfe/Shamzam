@@ -83,3 +83,25 @@ Seperate Flask implementations for each microservice, catalogue and lookup. Cata
 ├── README.md
 └── requirements.txt
 ```
+
+## System Design
+
+### Backend
+
+![image](./design/backend.drawio.svg "Backend")
+
+### Catalogue: Add Track
+
+![image](./design/catalogue-add-track.drawio.svg "Catalogue: Add Track")
+
+### Catalogue: Remove Track
+
+![image](./design/catalogue-remove-track.drawio.svg "Catalogue: Remove Track")
+
+### Catalogue: List Tracks
+
+![image](./design/catalogue-list-tracks.drawio.svg "Catalogue: List Tracks")
+
+### Lookup: Convert Fragment
+
+![image](./design/lookup-convert-fragment.drawio.svg "Lookup: Convert Fragment")
