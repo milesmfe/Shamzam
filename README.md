@@ -38,7 +38,7 @@ The following implementation requirements must be satisfied:
 | D1             | Implement S1 endpoint (POST)     | Complete    |
 | D2             | Implement S2 endpoint (DELETE)   | Complete    |
 | D3             | Implement S3 endpoint (GET)      | Complete    |
-| D4             | Implement S4 endpoint (POST)     | Not Started |
+| D4             | Implement S4 endpoint (POST)     | Complete    |
 | D5             | Implement Additional endpoints   | Not Started |
 | D6             | Implement database connection    | Not Started |
 | D7             | Develop API layer                | Not Started |
