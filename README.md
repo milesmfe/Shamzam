@@ -37,7 +37,7 @@ The following implementation requirements must be satisfied:
 | P4             | Design database schemas (SQLite) | Complete    |
 | D1             | Implement S1 endpoint (POST)     | Complete    |
 | D2             | Implement S2 endpoint (DELETE)   | Complete    |
-| D3             | Implement S3 endpoint (GET)      | Not Started |
+| D3             | Implement S3 endpoint (GET)      | Complete    |
 | D4             | Implement S4 endpoint (POST)     | Not Started |
 | D5             | Implement database connection    | Not Started |
 | D6             | Develop API layer                | Not Started |
