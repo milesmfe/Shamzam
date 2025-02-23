@@ -103,6 +103,10 @@ Seperate Flask implementations for each microservice, catalogue and lookup. Cata
 
 ![image](./design/catalogue-list-tracks.drawio.svg "Catalogue: List Tracks")
 
+### Catalogue: Get Track
+
+![Image](design/catalogue-get-track.drawio.svg "Catalogue: Get Track")
+
 ### Lookup: Convert Fragment
 
 ![image](./design/lookup-convert-fragment.drawio.svg "Lookup: Convert Fragment")
