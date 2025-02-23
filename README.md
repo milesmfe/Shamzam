@@ -33,7 +33,7 @@ The following implementation requirements must be satisfied:
 | -------------- | -------------------------------- | ----------- |
 | P1             | Define project architecture      | Complete    |
 | P2             | Set up development environment   | Complete    |
-| P3             | Create endpoint diagrams         | Not Started |
+| P3             | Create endpoint diagrams         | Complete    |
 | P4             | Design database schemas (SQLite) | Not Started |
 | D1             | Implement S1 endpoint (POST)     | Not Started |
 | D2             | Implement S2 endpoint (DELETE)   | Not Started |
