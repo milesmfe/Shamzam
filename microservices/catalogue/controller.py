@@ -11,3 +11,14 @@ class CatalogueController:
         track_id = 0
         
         return {'message': 'Track added successfully', 'track_id': track_id}, 201
+    
+    def remove_track(self, id):
+        
+        # Check id
+        if not id: return {'error': 'Track not specified'}, 400
+        if not id.isdigit(): return {'error': 'Invalid track id'}, 400
+        
+        # TODO: Check if track exists in database
+        
+        #TODO: Database connection: Remove track from database
+        return {'message': 'Track removed successfully'}, 200

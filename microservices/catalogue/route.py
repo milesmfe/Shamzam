@@ -12,3 +12,11 @@ def add_track():
     return make_response(jsonify(result), code)
   except Exception:
     return make_response(jsonify({'error': 'Internal Server Error'}), 500)
+  
+@catalogue_bp.route('/tracks/<id>', methods=['DELETE'])
+def remove_track(id):
+  try:
+    result, code = catalogue_controller.remove_track(id)
+    return make_response(jsonify(result), code)
+  except Exception:
+    return make_response(jsonify({'error': 'Internal Server Error'}), 500)
