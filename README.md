@@ -40,7 +40,7 @@ The following implementation requirements must be satisfied:
 | D3             | Implement S3 endpoint (GET)      | Complete    |
 | D4             | Implement S4 endpoint (POST)     | Complete    |
 | D5             | Implement Additional endpoints   | Started     |
-| D6             | Implement database connection    | Not Started |
+| D6             | Implement database connection    | Started     |
 | D7             | Develop API layer                | Not Started |
 | D8             | Dockerise (Docker)               | Not Started |
 | UT1            | Test D1 implementation           | Not Started |
