@@ -29,29 +29,29 @@ The following implementation requirements must be satisfied:
 
 ## Workflow
 
-| Requirement ID | Description                      | Status      |
-| -------------- | -------------------------------- | ----------- |
-| P1             | Define project architecture      | Complete    |
-| P2             | Set up development environment   | Complete    |
-| P3             | Create endpoint diagrams         | Complete    |
-| P4             | Design database schemas (SQLite) | Complete    |
-| D1             | Implement S1 endpoint (POST)     | Complete    |
-| D2             | Implement S2 endpoint (DELETE)   | Not Started |
-| D3             | Implement S3 endpoint (GET)      | Not Started |
-| D4             | Implement S4 endpoint (POST)     | Not Started |
-| D5             | Implement database connection    | Not Started |
-| D6             | Develop API layer                | Not Started |
-| D7             | Dockerise (Docker)               | Not Started |
-| UT1            | Test D1 implementation           | Not Started |
-| UT3            | Test D2 implementation          | Not Started |
-| UT3            | Test D3 implementation          | Not Started |
-| UT4            | Test D4 implementation          | Not Started |
-| UT5            | Test D5 implementation           | Not Started |
-| E2ET1          | Test happy administrator         | Not Started |
-| E2ET2          | Test unhappy administrator      | Not Started |
-| E2ET3          | Test happy user                  | Not Started |
-| E2ET4          | Test unhappy user               | Not Started |
-| DP1            | Deploy & Submit                  | Not Started |
+| Requirement ID | Description                      | Status                       |
+| -------------- | -------------------------------- | ---------------------------- |
+| P1             | Define project architecture      | Complete                     |
+| P2             | Set up development environment   | Complete                     |
+| P3             | Create endpoint diagrams         | Complete                     |
+| P4             | Design database schemas (SQLite) | Complete                     |
+| D1             | Implement S1 endpoint (POST)     | Complete                     |
+| D2             | Implement S2 endpoint (DELETE)   | [Issue #7](issues/7 "View Issue")  |
+| D3             | Implement S3 endpoint (GET)      | Not Started                  |
+| D4             | Implement S4 endpoint (POST)     | Not Started                  |
+| D5             | Implement database connection    | Not Started                  |
+| D6             | Develop API layer                | Not Started                  |
+| D7             | Dockerise (Docker)               | Not Started                  |
+| UT1            | Test D1 implementation           | Not Started                  |
+| UT3            | Test D2 implementation          | Not Started                  |
+| UT3            | Test D3 implementation          | Not Started                  |
+| UT4            | Test D4 implementation          | Not Started                  |
+| UT5            | Test D5 implementation           | Not Started                  |
+| E2ET1          | Test happy administrator         | Not Started                  |
+| E2ET2          | Test unhappy administrator      | Not Started                  |
+| E2ET3          | Test happy user                  | Not Started                  |
+| E2ET4          | Test unhappy user               | Not Started                  |
+| DP1            | Deploy & Submit                  | Not Started                  |
 
 ## Architecture
 
