@@ -115,16 +115,15 @@ Seperate Flask implementations for each microservice, catalogue and lookup. Cata
 
 ### **Tracks Table**
 
-| Column Name | Data Type | Constraints                           |
-| ----------- | --------- | ------------------------------------- |
-| id          | INTEGER   | PRIMARY KEY, AUTOINCREMENT            |
-| name        | TEXT      | NOT NULL, UNIQUE                      |
-| artist      | TEXT      | NOT NULL                              |
-| album       | TEXT      | NULLABLE                              |
-| genre       | TEXT      | NULLABLE                              |
-| duration    | INTEGER   | NOT NULL (seconds)                    |
-| file_path   | TEXT      | NOT NULL (location of the music file) |
-| created_at  | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP             |
+| Column Name | Data Type | Constraints                |
+| ----------- | --------- | -------------------------- |
+| id          | INTEGER   | PRIMARY KEY, AUTOINCREMENT |
+| name        | TEXT      | NOT NULL, UNIQUE           |
+| artist      | TEXT      | NOT NULL                   |
+| album       | TEXT      | NULLABLE                   |
+| genre       | TEXT      | NULLABLE                   |
+| duration    | INTEGER   | NOT NULL (seconds)         |
+| created_at  | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP  |
 
 ### Fragments **Table**
 
@@ -155,7 +154,6 @@ CREATE TABLE tracks (
     album TEXT,
     genre TEXT,
     duration INTEGER NOT NULL,
-    file_path TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -1,5 +1,6 @@
 import sqlite3
 import os
+from dotenv import load_dotenv
 
 CREATE_TRACKS_TABLE = '''
 CREATE TABLE IF NOT EXISTS tracks (
@@ -9,7 +10,6 @@ CREATE TABLE IF NOT EXISTS tracks (
     album TEXT,
     genre TEXT,
     duration INTEGER NOT NULL,
-    file_path TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 '''
@@ -34,10 +34,13 @@ CREATE TABLE IF NOT EXISTS conversions (
 )
 '''
 
+load_dotenv()
+DATABASE_PATH = os.getenv('DATABASE_PATH')
+
 def create_database():
-    if not os.path.exists('microservices/catalogue/db/catalogue.db'):
-        open('microservices/catalogue/db/catalogue.db', 'w').close()
-    conn = sqlite3.connect('microservices/catalogue/db/catalogue.db')
+    if not os.path.exists(DATABASE_PATH):
+        open(DATABASE_PATH, 'w').close()
+    conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
     c.execute(CREATE_TRACKS_TABLE)
     c.execute(CREATE_FRAGMENTS_TABLE)
