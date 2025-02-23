@@ -1,3 +1,3 @@
 class CatalogueController:
-    def index(self):
-        return {'message':'Hello, World!'}
+    def add_track(self, data):
+        return data
