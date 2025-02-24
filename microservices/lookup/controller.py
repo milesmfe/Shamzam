@@ -1,20 +1,52 @@
+import os
+from dotenv import load_dotenv
+import requests
+
+
 class LookupController:
-    def convert_fragment(self, request):
-        required_fields = {'fragment'}
-        
+    def convert_fragment(self, files):
+        load_dotenv()
+        AUDD_KEY = os.getenv('AUDD_KEY')
+                
         # Check request
-        if not request: return {'error': 'Missing required fields'}, 400
-        if not all(field in request for field in required_fields):
-            return {'error': 'Missing required fields'}, 400
+        if not files: return {'error': 'Missing audio file'}, 400
+        if len(files) > 1: return {'error': 'Multiple audio files detected'}, 400
+        audio_fragment = files.get('file')
+        if not audio_fragment.filename.endswith('.wav'): return {'error': 'Invalid audio file format, expected .wav'}, 400
+                        
+        response = requests.post(
+            'https://api.audd.io/',
+            data = {
+                'api_token': AUDD_KEY,
+                'return': 'timecode,apple_music,deezer,spotify',
+            },
+            files = {'file': audio_fragment}
+        )
+                
+        if response.status_code != 200: return {'error': 'Failed to process audio fragment'}, 500
+        response_json = response.json()
+        if response_json['status'] == 'error': return {'error': 'Failed to process audio fragment'}, 500
+        if response_json['status'] != 'success': return {'error': 'Failed to identify track'}, 500
+                
+        full_track = {
+            'name': response_json['result']['title'],
+            'artist': response_json['result']['artist'],
+            'album': response_json['result']['album'],
+            'genre': response_json['result']['genre'],
+            'duration': response_json['result']['duration'],
+        }
+                
+        response = requests.get(
+            '127.0.0.1:5000/catalogue/tracks/list'
+        )
         
-        # TODO: Check if fragment is valid
+        if response.status_code != 200: return {'error': 'Failed to retrieve track list'}, 500
+        response_json = response.json()
+        if 'error' in response_json: return {'error': 'Failed to retrieve track list'}, 500
+        if 'tracks' not in response_json: return {'error': 'Failed to retrieve track list'}, 500
         
-        # TODO: Audd.io API connection: Convert fragment to music
+        tracks = response_json['tracks']
         
-        # TODO: Database connection: Check if music exists in database
+        print(tracks)       
         
-        # TODO: Database connection: Get music from database
-        full_track = {'name': 'Name', 'artist': 'Artist', 'album': 'Album', 'genre': 'Genre', 'duration': 0}
-        track_id = 0
-        
-        return {'full_track': full_track, 'track_id': track_id}, 200
+        return {'full_track': full_track}, 200
