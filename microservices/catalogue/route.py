@@ -1,5 +1,5 @@
 from flask import Blueprint, make_response, jsonify, request
-from controller import CatalogueController
+from microservices.catalogue.controller import CatalogueController
 
 
 catalogue_bp = Blueprint('catalogue', __name__)
