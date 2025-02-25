@@ -2,6 +2,51 @@
 
 This project was created to complete the coursework assigned to me under the module, Enterprise Computing (ECM3408), for my final year at The University of Exeter.
 
+## Setup & Installation
+
+### Prerequisites
+
+- Python 3.10+
+- pip 23.0+
+- SQLite (default) or PostgreSQL
+- [Audd.io API Key](https://audd.io/)
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/milesmfe/Shamzam.git
+cd shamzam
+```
+
+### 2. Install Dependencies
+
+```bash
+python -m pip install -r requirements.txt
+python -m pip install -e .  # Install project in editable mode
+```
+
+### 3. Configure Environment
+
+```bash
+echo “AUDD_API_KEY=your_audd_io_key_here” > .env 
+echo “FLASK_ENV=development” >> .env
+```
+
+## Running Services
+
+### Option 1: Individual Services
+
+```bash
+flask --app services.catalogue.app run -p 5000
+flask --app services.recognition.app run -p 5001
+```
+
+### Option 2: Gateway (All Services)
+
+```bash
+gunicorn gateway:application
+```
+
 ## Specificaiton
 
 ### Project Brief
@@ -39,9 +84,9 @@ The following implementation requirements must be satisfied:
 | D2             | Implement S2 endpoint (DELETE)   | Complete    |
 | D3             | Implement S3 endpoint (GET)      | Complete    |
 | D4             | Implement S4 endpoint (POST)     | Complete    |
-| D5             | Implement Additional endpoints   | Started     |
-| D6             | Implement database connection    | Started     |
-| D7             | Develop API layer                | Started     |
+| D5             | Implement Additional endpoints   | Complete    |
+| D6             | Implement database connection    | Complete    |
+| D7             | Develop gateway                  | Complete    |
 | D8             | Dockerise (Docker)               | Not Started |
 | UT1            | Test D1 implementation           | Not Started |
 | UT3            | Test D2 implementation          | Not Started |
@@ -64,113 +109,90 @@ The following implementation requirements must be satisfied:
 * Audd.io API
 * Docker
 
-### Project Structure (Pre-Dockerisation)
+### Project Structure
 
-Seperate Flask implementations for each microservice, catalogue and lookup. Catalogue satisfies S1, S2 and S3, and lookup satisfies S4. Gateway provides a single entry point for both microservices.
+Seperate Flask modules for each service, catalogue and recognition. Catalogue satisfies S1, S2 and S3, and recognition satisfies S4. Gateway provides a single entry point for both services.
 
 ```
 .
-├── db
-│   └── database file
-├── microservices
-│   ├── catalogue
-│   │   └── flask implementation
-│   └── lookup
-│       └── flask implementation
-├── gateway
-│   └── flask implementation
-├── .env
-├── .gitignore
 ├── README.md
-└── requirements.txt
+├── gateway.py
+├── requirements.txt
+├── services
+│   ├── catalogue
+│   │   ├── __init__.py
+│   │   ├── app.py
+│   │   ├── extensions.py
+│   │   └── test_app.py
+│   └── recognition
+│   │   ├── __init__.py
+│   │   ├── app.py
+│   │   ├── extensions.py
+│   │   └── test_app.py
+├── setup.py
+└── shared
+    ├── __init__.py
+    └── utils.py
 ```
 
 ## System Design
 
 ### Backend
 
-![image](./design/backend.drawio.svg "Backend")
+![image](.design/backend.drawio.svg "Backend")
 
 ### Catalogue: Add Track
 
-![image](./design/catalogue-add-track.drawio.svg "Catalogue: Add Track")
+![image](.design/catalogue-add-track.drawio.svg "Catalogue: Add Track")
 
 ### Catalogue: Remove Track
 
-![image](./design/catalogue-remove-track.drawio.svg "Catalogue: Remove Track")
+![image](.design/catalogue-remove-track.drawio.svg "Catalogue: Remove Track")
 
 ### Catalogue: List Tracks
 
-![image](./design/catalogue-list-tracks.drawio.svg "Catalogue: List Tracks")
+![image](.design/catalogue-list-tracks.drawio.svg "Catalogue: List Tracks")
 
 ### Catalogue: Get Track
 
-![Image](design/catalogue-get-track.drawio.svg "Catalogue: Get Track")
+![Image](.design/catalogue-get-track.drawio.svg "Catalogue: Get Track")
 
-### Lookup: Convert Fragment
+### Recognition: Identify Track
 
-![image](./design/lookup-convert-fragment.drawio.svg "Lookup: Convert Fragment")
+![image](.design/recognition-identify-track.drawio.svg "Recognition: Identify Track")
 
 ## Database Schema
 
-### **Tracks Table**
+### **Table: tracks**
 
-| Column Name | Data Type | Constraints                |
-| ----------- | --------- | -------------------------- |
-| id          | INTEGER   | PRIMARY KEY, AUTOINCREMENT |
-| name        | TEXT      | NOT NULL, UNIQUE           |
-| artist      | TEXT      | NOT NULL                   |
-| album       | TEXT      | NULLABLE                   |
-| genre       | TEXT      | NULLABLE                   |
-| duration    | INTEGER   | NOT NULL (seconds)         |
-| created_at  | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP  |
+| Column Name | Type         | Description                             | Constraints               |
+| ----------- | ------------ | --------------------------------------- | ------------------------- |
+| id          | VARCHAR(64)  | SHA-256 hash of audio file content (PK) | PRIMARY KEY               |
+| title       | VARCHAR(100) | Song title                              | NOT NULL                  |
+| artist      | VARCHAR(100) | Artist name                             | NOT NULL                  |
+| audio_file  | BLOB         | Raw audio bytes (MP3/WAV)               | NOT NULL                  |
+| created_at  | DATETIME     | Timestamp of addition                   | DEFAULT CURRENT_TIMESTAMP |
 
-### Fragments **Table**
+### SQLAlchemy
 
-| Column Name | Data Type | Constraints                                |
-| ----------- | --------- | ------------------------------------------ |
-| id          | INTEGER   | PRIMARY KEY, AUTOINCREMENT                 |
-| fragment    | TEXT      | NOT NULL (file path of the fragment)       |
-| user_id     | INTEGER   | NULLABLE (if user authentication is added) |
-| created_at  | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP                  |
+```python
+from datetime import datetime
+from .extensions import db
 
-### Conversions **Table**
+class Track(db.Model):
+    __tablename__ = 'tracks'
+  
+    id = db.Column(db.String(64), primary_key=True)  # SHA-256 fingerprint
+    title = db.Column(db.String(100), nullable=False)
+    artist = db.Column(db.String(100), nullable=False)
+    audio_file = db.Column(db.LargeBinary, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-| Column Name | Data Type | Constraints                                                              |
-| ----------- | --------- | ------------------------------------------------------------------------ |
-| id          | INTEGER   | PRIMARY KEY, AUTOINCREMENT                                               |
-| fragment_id | INTEGER   | FOREIGN KEY REFERENCES `<span>fragments(id)</span>`, ON DELETE CASCADE |
-| track_id    | INTEGER   | FOREIGN KEY REFERENCES `<span>tracks(id)</span>`, ON DELETE CASCADE    |
-| confidence  | REAL      | NOT NULL (match confidence score)                                        |
-| created_at  | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP                                                |
-
-### SQL
-
-```sql
-CREATE TABLE tracks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    artist TEXT NOT NULL,
-    album TEXT,
-    genre TEXT,
-    duration INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE fragments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    fragment TEXT NOT NULL,
-    user_id INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE conversions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    fragment_id INTEGER NOT NULL,
-    track_id INTEGER NOT NULL,
-    confidence REAL NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON DELETE CASCADE,
-    FOREIGN KEY (track_id) REFERENCES tracks(id) ON DELETE CASCADE
-);
+    def serialize(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "artist": self.artist,
+            "created_at": self.created_at.isoformat()
+        }
 ```
