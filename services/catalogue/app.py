@@ -1,4 +1,3 @@
-# catalogue_service/app.py
 from flask import Flask, Blueprint, request
 from dotenv import load_dotenv
 from werkzeug.exceptions import BadRequest

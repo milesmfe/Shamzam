@@ -1,4 +1,3 @@
-# gateway.py
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from werkzeug.middleware.proxy_fix import ProxyFix
 from services.catalogue.app import app as catalogue_app

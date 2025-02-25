@@ -1,4 +1,3 @@
-# shared/utils.py
 import hashlib
 import logging
 import requests
