@@ -105,6 +105,38 @@ def list_tracks():
         data=[t.serialize() for t in tracks],
         message="Catalogue retrieved successfully"
     )
+    
+@tracks_bp.route('/<string:track_id>', methods=['GET'])
+@handle_errors
+def get_track(track_id):
+    """Get single track details including audio file"""
+    track = Track.query.get_or_404(track_id)
+    return format_response(
+        data={
+            'id': track.id,
+            'title': track.title,
+            'artist': track.artist,
+            'audio_file': track.audio_file.decode('latin-1')  # Simple encoding
+        },
+        message="Track details retrieved"
+    )
+
+@tracks_bp.route('/search', methods=['GET'])
+@handle_errors
+def search_tracks():
+    """Search tracks by title and/or artist"""
+    title = request.args.get('title')
+    artist = request.args.get('artist')
+    
+    query = Track.query
+    if title: query = query.filter(Track.title.ilike(f'%{title}%'))
+    if artist: query = query.filter(Track.artist.ilike(f'%{artist}%'))
+    
+    tracks = query.all()
+    return format_response(
+        data=[t.serialize() for t in tracks],
+        message="Search results"
+    )
 
 def create_app():
     """Application factory function"""
