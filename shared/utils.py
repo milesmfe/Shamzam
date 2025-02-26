@@ -40,19 +40,28 @@ def generate_audio_hash(audio_data: bytes) -> str:
     return hashlib.sha256(audio_data).hexdigest()
 
 
-def validate_audio_format(filename: str, allowed_extensions: List[str] = ['mp3', 'wav']):
+def validate_audio_format(filename: str, allowed_extensions: List[str] = ['wav']):
     """Validate audio file extension.
     
     Args:
         filename: Uploaded file name
-        allowed_extensions: Permitted file types
+        allowed_extensions: Permitted file types (default: WAV only)
         
     Raises:
         BadRequest: If extension is invalid
     """
     extension = filename.split('.')[-1].lower()
     if extension not in allowed_extensions:
-        raise BadRequest(f"Invalid file type {extension}. Allowed: {', '.join(allowed_extensions)}")
+        raise BadRequest(f"Invalid file type {extension}. Only WAV files allowed")
+    
+    
+def validate_wav_content(audio_data: bytes):
+    """Validate the file is actually a WAV file using header bytes"""
+    if len(audio_data) < 44:
+        raise BadRequest("Invalid WAV file: File too small")
+        
+    if not audio_data.startswith(b'RIFF') or audio_data[8:12] != b'WAVE':
+        raise BadRequest("Invalid WAV file: Missing RIFF/WAVE headers")
 
 
 # --------------------------
@@ -172,8 +181,8 @@ def validate_required_fields(data: Dict, required_fields: List[str]):
         raise BadRequest(f"Missing required fields: {', '.join(missing)}")
 
 
-def validate_file_upload(file_key='audio_file', max_size=10*1024*1024):
-    """Validate uploaded file presence and size"""
+def validate_file_upload(file_key='audio_file', max_size=1000*1024*1024):
+    """Validate uploaded WAV file presence, size, and format"""
     if file_key not in request.files:
         raise BadRequest(f"No {file_key} uploaded")
         
@@ -181,7 +190,13 @@ def validate_file_upload(file_key='audio_file', max_size=10*1024*1024):
     if file.filename == '':
         raise BadRequest("Empty filename")
         
-    if len(file.read()) > max_size:
+    # Enforce WAV validation at upload time
+    validate_audio_format(file.filename)
+    
+    content = file.read()
+    validate_wav_content(content)  # New content validation
+    
+    if len(content) > max_size:
         raise BadRequest(f"File exceeds {max_size} bytes limit")
         
     file.seek(0)  # Reset file pointer

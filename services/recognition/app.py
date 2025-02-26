@@ -1,25 +1,36 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 import requests
 import os
-from shared.utils import handle_errors, validate_file_upload
+from shared.utils import handle_errors, validate_audio_format, validate_file_upload
 
 def create_app():
     app = Flask(__name__)
     app.config['AUDD_API_KEY'] = os.getenv('AUDD_API_KEY')
-    catalogue_host = os.getenv('CATALOGUE_INTERNAL_HOST')
-    catalogue_port = os.getenv('CATALOGUE_INTERNAL_PORT')
-    app.config['CATALOGUE_INTERNAL_URL'] = f"http://{catalogue_host}:{catalogue_port}/tracks"
+    
+    GATEWAY_HOST = os.getenv('GATEWAY_HOST', 'localhost')
+    GATEWAY_PORT = os.getenv('GATEWAY_PORT', 8000)
+    CATALOGUE_BASE_URL = f"http://{GATEWAY_HOST}:{GATEWAY_PORT}/catalogue"
+    
+    headers = {
+        'X-Internal-Request': 'true',
+        'User-Agent': 'RecognitionService/1.0'
+    }
 
     @app.route('/health')
     def health():
         return 'Recognition operational', 200
+    
+    @app.route('/')
+    def index():
+        return render_template('index.html')
 
-    @app.route('/recognize', methods=['POST'])
+    @app.route('/api/recognize', methods=['POST'])
     @handle_errors
     def recognize():
         """Audio recognition and catalogue matching endpoint"""
         # 1. Validate audio file upload
         audio_file = validate_file_upload('audio_file')
+        validate_audio_format(audio_file.filename)
         audio_bytes = audio_file.read()
 
         try:
@@ -45,8 +56,9 @@ def create_app():
                 'artist': audd_result['artist']
             }
             catalogue_response = requests.get(
-                f"{app.config['CATALOGUE_INTERNAL_URL']}/tracks/search",
+                f"{CATALOGUE_BASE_URL}/tracks/search",
                 params=search_params,
+                headers=headers,
                 timeout=10 
             )
             
@@ -67,18 +79,19 @@ def create_app():
 
             # 4. Get full track details from catalogue
             track_id = matches[0]['id']
-            track_response = requests.get(
-                f"{app.config['CATALOGUE_INTERNAL_URL']}/tracks/{track_id}",
-                timeout=10 
+            catalogue_response = requests.get(
+                f"{CATALOGUE_BASE_URL}/tracks/{track_id}",
+                headers={'X-Internal-Request': 'true'},
+                timeout=10
             )
             
-            if track_response.status_code != 200:
+            if catalogue_response.status_code != 200:
                 return jsonify({
                     "error": "Failed to retrieve track details",
                     "code": "TRACK_FETCH_ERROR"
                 }), 502
 
-            return jsonify(track_response.json()['data'])
+            return jsonify(catalogue_response.json()['data'])
 
         except requests.exceptions.Timeout:
             return jsonify({

@@ -1,7 +1,9 @@
+import base64
 import os
-from flask import Flask, abort, request
-from dotenv import load_dotenv
+from flask import Flask, request
+from flask_cors import CORS
 from werkzeug.exceptions import BadRequest
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from services.catalogue.extensions import db
 from services.catalogue.track import Track
@@ -9,19 +11,22 @@ from shared.utils import (
     format_response,
     generate_audio_hash,
     handle_errors,
+    validate_audio_format,
     validate_file_upload
 )
-
-# Load environment variables
-load_dotenv()
-
-INTERNAL_PORT = os.getenv('CATALOGUE_INTERNAL_PORT', 5000)
-INTERNAL_HOST = os.getenv('CATALOGUE_INTERNAL_HOST', 'localhost')
-
 
 def create_app():
     """Application factory function"""
     app = Flask(__name__)
+    
+    CORS(app, resources={r"/tracks/*": {"origins": "*"}})
+    
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=1,
+        x_proto=1,
+        x_host=1,
+    )
     
     # Configure application
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI', 'sqlite:///database.db')
@@ -45,6 +50,8 @@ def create_app():
         """Handle file upload and track metadata"""
         # Validate file upload
         audio_file = validate_file_upload('audio_file')  # From shared/utils.py
+        
+        validate_audio_format(audio_file.filename)
         
         # Get form fields
         title = request.form.get('title')
@@ -114,14 +121,17 @@ def create_app():
     @app.route('/tracks/<string:track_id>', methods=['GET'])
     @handle_errors
     def get_track(track_id):
-        """Get single track details including audio file"""
         track = Track.query.get_or_404(track_id)
+        
+        # Encode audio bytes to proper base64
+        audio_base64 = base64.b64encode(track.audio_file).decode('utf-8')
+        
         return format_response(
             data={
                 'id': track.id,
                 'title': track.title,
                 'artist': track.artist,
-                'audio_file': track.audio_file.decode('latin-1')  # Simple encoding
+                'audio_file': audio_base64
             },
             message="Track details retrieved"
         )
@@ -149,8 +159,8 @@ app = create_app()
 
 if __name__ == '__main__':
     app.run(
-        host=INTERNAL_HOST,
-        port=INTERNAL_PORT,
+        host='localhost',
+        port=5000,
         threaded=True,
         debug=False
     )
