@@ -1,6 +1,6 @@
 import base64
 import os
-from flask import Flask, request
+from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 from werkzeug.exceptions import BadRequest
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -43,8 +43,13 @@ def create_app():
     @app.route('/tracks/health')
     def health():
         return 'Catalogue operational', 200
+    
+    @app.route('/')
+    def index():
+        """Main catalogue interface"""
+        return render_template('index.html')
 
-    @app.route('/tracks/', methods=['POST'])
+    @app.route('/tracks', methods=['POST'])
     @handle_errors
     def add_track():
         """Handle file upload and track metadata"""
