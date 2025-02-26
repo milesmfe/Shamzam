@@ -1,9 +1,10 @@
-from flask import Flask, Blueprint, request
+import os
+from flask import Flask, abort, request
 from dotenv import load_dotenv
 from werkzeug.exceptions import BadRequest
-from services.catalogue.extensions import db
-import os
 
+from services.catalogue.extensions import db
+from services.catalogue.track import Track
 from shared.utils import (
     format_response,
     generate_audio_hash,
@@ -14,129 +15,9 @@ from shared.utils import (
 # Load environment variables
 load_dotenv()
 
-# Models
-class Track(db.Model):
-    """Database model for music tracks"""
-    __tablename__ = 'tracks'
-    
-    id = db.Column(db.String(64), primary_key=True)  # SHA-256 hash
-    title = db.Column(db.String(100), nullable=False)
-    artist = db.Column(db.String(100), nullable=False)
-    audio_file = db.Column(db.LargeBinary, nullable=False)
+INTERNAL_PORT = os.getenv('CATALOGUE_INTERNAL_PORT', 5000)
+INTERNAL_HOST = os.getenv('CATALOGUE_INTERNAL_HOST', 'localhost')
 
-    def serialize(self):
-        return {
-            'id': self.id,
-            'title': self.title,
-            'artist': self.artist
-        }
-
-# Routes
-tracks_bp = Blueprint('tracks', __name__)
-
-@tracks_bp.route('/', methods=['POST'])
-@handle_errors
-def add_track():
-    """Handle file upload and track metadata"""
-    # Validate file upload
-    audio_file = validate_file_upload('audio_file')  # From shared/utils.py
-    
-    # Get form fields
-    title = request.form.get('title')
-    artist = request.form.get('artist')
-    
-    # Validate required fields
-    if not title or not artist:
-        raise BadRequest("Missing title or artist in form data")
-    
-    # Generate hash from audio bytes
-    audio_bytes = audio_file.read()
-    audio_hash = generate_audio_hash(audio_bytes)
-    
-    # Check for duplicates
-    if Track.query.get(audio_hash):
-        return format_response(
-            status=409,
-            message="Track already exists in catalogue"
-        )
-    
-    # Create and save track
-    new_track = Track(
-        id=audio_hash,
-        title=title,
-        artist=artist,
-        audio_file=audio_bytes
-    )
-    db.session.add(new_track)
-    db.session.commit()
-    
-    return format_response(
-        data=new_track.serialize(),
-        status=201,
-        message="Track added successfully"
-    )
-
-@tracks_bp.route('/<string:track_id>', methods=['DELETE'])
-@handle_errors
-def remove_track(track_id):
-    """Endpoint for S2: Remove track from catalogue"""
-    track = Track.query.get(track_id)
-    
-    if not track:
-        return format_response(
-            status=404,
-            message="Track not found"
-        )
-    
-    db.session.delete(track)
-    db.session.commit()
-    
-    return format_response(
-        status=204,
-        message="Track deleted successfully"
-    )
-
-@tracks_bp.route('/', methods=['GET'])
-@handle_errors
-def list_tracks():
-    """Endpoint for S3: List all tracks in catalogue"""
-    tracks = Track.query.all()
-    return format_response(
-        data=[t.serialize() for t in tracks],
-        message="Catalogue retrieved successfully"
-    )
-    
-@tracks_bp.route('/<string:track_id>', methods=['GET'])
-@handle_errors
-def get_track(track_id):
-    """Get single track details including audio file"""
-    track = Track.query.get_or_404(track_id)
-    return format_response(
-        data={
-            'id': track.id,
-            'title': track.title,
-            'artist': track.artist,
-            'audio_file': track.audio_file.decode('latin-1')  # Simple encoding
-        },
-        message="Track details retrieved"
-    )
-
-@tracks_bp.route('/search', methods=['GET'])
-@handle_errors
-def search_tracks():
-    """Search tracks by title and/or artist"""
-    title = request.args.get('title')
-    artist = request.args.get('artist')
-    
-    query = Track.query
-    if title: query = query.filter(Track.title.ilike(f'%{title}%'))
-    if artist: query = query.filter(Track.artist.ilike(f'%{artist}%'))
-    
-    tracks = query.all()
-    return format_response(
-        data=[t.serialize() for t in tracks],
-        message="Search results"
-    )
 
 def create_app():
     """Application factory function"""
@@ -149,17 +30,127 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     
-    # Register blueprints
-    app.register_blueprint(tracks_bp, url_prefix='/tracks')
-    
     # Create tables
     with app.app_context():
         db.create_all()
+        
+    # Routes
+    @app.route('/tracks/health')
+    def health():
+        return 'Catalogue operational', 200
+
+    @app.route('/tracks/', methods=['POST'])
+    @handle_errors
+    def add_track():
+        """Handle file upload and track metadata"""
+        # Validate file upload
+        audio_file = validate_file_upload('audio_file')  # From shared/utils.py
+        
+        # Get form fields
+        title = request.form.get('title')
+        artist = request.form.get('artist')
+        
+        # Validate required fields
+        if not title or not artist:
+            raise BadRequest("Missing title or artist in form data")
+        
+        # Generate hash from audio bytes
+        audio_bytes = audio_file.read()
+        audio_hash = generate_audio_hash(audio_bytes)
+        
+        # Check for duplicates
+        if Track.query.get(audio_hash):
+            return format_response(
+                status=409,
+                message="Track already exists in catalogue"
+            )
+        
+        # Create and save track
+        new_track = Track(
+            id=audio_hash,
+            title=title,
+            artist=artist,
+            audio_file=audio_bytes
+        )
+        db.session.add(new_track)
+        db.session.commit()
+        
+        return format_response(
+            data=new_track.serialize(),
+            status=201,
+            message="Track added successfully"
+        )
+
+    @app.route('/tracks/<string:track_id>', methods=['DELETE'])
+    @handle_errors
+    def remove_track(track_id):
+        """Endpoint for S2: Remove track from catalogue"""
+        track = Track.query.get(track_id)
+        
+        if not track:
+            return format_response(
+                status=404,
+                message="Track not found"
+            )
+        
+        db.session.delete(track)
+        db.session.commit()
+        
+        return format_response(
+            status=204,
+            message="Track deleted successfully"
+        )
+
+    @app.route('/tracks/', methods=['GET'])
+    @handle_errors
+    def list_tracks():
+        """Endpoint for S3: List all tracks in catalogue"""
+        tracks = Track.query.all()
+        return format_response(
+            data=[t.serialize() for t in tracks],
+            message="Catalogue retrieved successfully"
+        )
+        
+    @app.route('/tracks/<string:track_id>', methods=['GET'])
+    @handle_errors
+    def get_track(track_id):
+        """Get single track details including audio file"""
+        track = Track.query.get_or_404(track_id)
+        return format_response(
+            data={
+                'id': track.id,
+                'title': track.title,
+                'artist': track.artist,
+                'audio_file': track.audio_file.decode('latin-1')  # Simple encoding
+            },
+            message="Track details retrieved"
+        )
+
+    @app.route('/tracks/search', methods=['GET'])
+    @handle_errors
+    def search_tracks():
+        """Search tracks by title and/or artist"""
+        title = request.args.get('title')
+        artist = request.args.get('artist')
+        
+        query = Track.query
+        if title: query = query.filter(Track.title.ilike(f'%{title}%'))
+        if artist: query = query.filter(Track.artist.ilike(f'%{artist}%'))
+        
+        tracks = query.all()
+        return format_response(
+            data=[t.serialize() for t in tracks],
+            message="Search results"
+        )
     
     return app
 
-# Initialize app instance
 app = create_app()
 
 if __name__ == '__main__':
-    app.run()
+    app.run(
+        host=INTERNAL_HOST,
+        port=INTERNAL_PORT,
+        threaded=True,
+        debug=False
+    )
