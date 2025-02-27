@@ -1,6 +1,6 @@
 import base64
 import os
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, render_template, request
 from flask_cors import CORS
 from werkzeug.exceptions import BadRequest
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -54,7 +54,7 @@ def create_app():
     def add_track():
         """Handle file upload and track metadata"""
         # Validate file upload
-        audio_file = validate_file_upload('audio_file')  # From shared/utils.py
+        audio_file = validate_file_upload('audio_file')
         
         validate_audio_format(audio_file.filename)
         

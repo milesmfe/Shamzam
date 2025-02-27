@@ -1,12 +1,15 @@
 from flask import Flask, jsonify, render_template
 import requests
 import os
-from shared.utils import handle_errors, validate_audio_format, validate_file_upload
+from shared.utils import (
+    handle_errors,
+    validate_audio_format,
+    validate_file_upload
+)
 
 def create_app():
     app = Flask(__name__)
-    app.config['AUDD_API_KEY'] = os.getenv('AUDD_API_KEY')
-    
+    AUDD_API_KEY = os.getenv('AUDD_API_KEY')
     GATEWAY_HOST = os.getenv('GATEWAY_HOST', 'localhost')
     GATEWAY_PORT = os.getenv('GATEWAY_PORT', 8000)
     CATALOGUE_BASE_URL = f"http://{GATEWAY_HOST}:{GATEWAY_PORT}/catalogue"
@@ -38,7 +41,7 @@ def create_app():
             audd_response = requests.post(
                 "https://api.audd.io/recognize",
                 files={'file': (audio_file.filename, audio_bytes)},
-                data={'api_token': app.config['AUDD_API_KEY']},
+                data={'api_token': AUDD_API_KEY},
                 timeout=10
             )
             audd_response.raise_for_status()
