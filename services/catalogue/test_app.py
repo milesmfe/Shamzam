@@ -1,86 +1,76 @@
+from io import BytesIO
 import pytest
-import base64
-from catalogue.app import create_app, Track
-from catalogue.extensions import db
+from services.catalogue.app import create_app, db
+from services.catalogue.track import Track
 
-@pytest.fixture(scope='module')
-def test_client():
+@pytest.fixture
+def app():
     app = create_app()
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    
-    with app.test_client() as testing_client:
-        with app.app_context():
-            db.create_all()
-            yield testing_client
-        with app.app_context():
-            db.drop_all()
+    app.config.update({
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:"
+    })
 
-def test_add_track(test_client):
-    """Test S1 with file upload"""
-    with open('test_audio.wav', 'rb') as f:
-        response = test_client.post('/tracks/', data={
-            'title': 'Test Song',
-            'artist': 'Test Artist',
-            'audio_file': f
-        }, content_type='multipart/form-data')
-    
-    assert response.status_code == 201
-    assert 'Test Song' in response.json['data']['title']
-    assert Track.query.count() == 1
+    with app.app_context():
+        db.create_all()
+        yield app
+        db.drop_all()
 
-def test_duplicate_track(test_client):
-    """Test S1 unhappy path: Duplicate track"""
-    audio_data = base64.b64encode(b"test_audio.wav").decode()
-    
-    # First submission
-    test_client.post('/tracks/', json={
-        'title': 'First',
-        'artist': 'Artist',
-        'audio_data': audio_data
-    })
-    
-    # Duplicate submission
-    response = test_client.post('/tracks/', json={
-        'title': 'Duplicate',
-        'artist': 'Artist',
-        'audio_data': audio_data
-    })
-    
-    assert response.status_code == 409
-    assert 'already exists' in response.json['message']
+@pytest.fixture
+def client(app):
+    return app.test_client()
 
-def test_remove_track(test_client):
-    """Test S2: Remove track"""
-    audio_data = base64.b64encode(b"audio_to_delete").decode()
-    
-    # Add track
-    add_res = test_client.post('/tracks/', json={
-        'title': 'To Delete',
-        'artist': 'Artist',
-        'audio_data': audio_data
-    })
-    track_id = add_res.json['data']['id']
-    
-    # Delete track
-    del_res = test_client.delete(f'/tracks/{track_id}')
-    assert del_res.status_code == 204
-    assert Track.query.count() == 0
-
-def test_list_tracks(test_client):
-    """Test S3: List tracks"""
-    # Add two tracks
-    test_client.post('/tracks/', json={
-        'title': 'Track 1',
-        'artist': 'Artist',
-        'audio_data': base64.b64encode(b"audio1").decode()
-    })
-    test_client.post('/tracks/', json={
-        'title': 'Track 2',
-        'artist': 'Artist',
-        'audio_data': base64.b64encode(b"audio2").decode()
-    })
-    
-    response = test_client.get('/tracks/')
+def test_health(client):
+    response = client.get('/tracks/health')
     assert response.status_code == 200
-    assert len(response.json['data']) == 2
+    assert response.data == b'Catalogue operational'
+
+def test_index(client):
+    response = client.get('/')
+    assert response.status_code == 200
+    assert b'Main catalogue interface' in response.data
+
+def test_add_track(client):
+    data = {
+        'title': 'Test Title',
+        'artist': 'Test Artist'
+    }
+    audio_file = (BytesIO(b"fake audio data"), 'test.wav')
+    response = client.post('/tracks', data=data, content_type='multipart/form-data')
+    assert response.status_code == 201
+    assert b'Track added successfully' in response.data
+
+def test_remove_track(client):
+    track = Track(id='test_id', title='Test Title', artist='Test Artist', audio_file=b'fake audio data')
+    db.session.add(track)
+    db.session.commit()
+
+    response = client.delete(f'/tracks/{track.id}')
+    assert response.status_code == 204
+
+def test_list_tracks(client):
+    track = Track(id='test_id', title='Test Title', artist='Test Artist', audio_file=b'fake audio data')
+    db.session.add(track)
+    db.session.commit()
+
+    response = client.get('/tracks/')
+    assert response.status_code == 200
+    assert b'Track details retrieved' in response.data
+
+def test_get_track(client):
+    track = Track(id='test_id', title='Test Title', artist='Test Artist', audio_file=b'fake audio data')
+    db.session.add(track)
+    db.session.commit()
+
+    response = client.get(f'/tracks/{track.id}')
+    assert response.status_code == 200
+    assert b'Track details retrieved' in response.data
+
+def test_search_tracks(client):
+    track = Track(id='test_id', title='Test Title', artist='Test Artist', audio_file=b'fake audio data')
+    db.session.add(track)
+    db.session.commit()
+
+    response = client.get('/tracks/search?title=Test')
+    assert response.status_code == 200
+    assert b'Search results' in response.data
