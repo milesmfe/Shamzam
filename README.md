@@ -81,11 +81,11 @@ The following implementation requirements must be satisfied:
 | D6             | Implement database connection    | Complete    |
 | D7             | Develop gateway                  | Complete    |
 | D8             | Dockerise (Docker)               | Not Started |
-| UT1            | Test D1 implementation           | Not Started |
-| UT3            | Test D2 implementation          | Not Started |
-| UT3            | Test D3 implementation          | Not Started |
-| UT4            | Test D4 implementation          | Not Started |
-| UT5            | Test D5 implementation           | Not Started |
+| UT1            | Test D1 implementation           | Complete    |
+| UT3            | Test D2 implementation          | Complete    |
+| UT3            | Test D3 implementation          | Complete    |
+| UT4            | Test D4 implementation          | Complete    |
+| UT5            | Test D5 implementation           | Complete    |
 | E2ET1          | Test happy administrator         | Not Started |
 | E2ET2          | Test unhappy administrator      | Not Started |
 | E2ET3          | Test happy user                  | Not Started |
