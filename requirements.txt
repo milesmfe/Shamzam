@@ -1,9 +1,12 @@
 # Core Dependencies
 Flask
 Flask-SQLAlchemy
+Flask-Limiter
+Flask-CORS
 python-dotenv
 requests
 SQLAlchemy
+requests
 
 # Production Server
 gunicorn
