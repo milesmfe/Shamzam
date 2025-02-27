@@ -22,29 +22,22 @@ cd shamzam
 
 ```bash
 python -m pip install -r requirements.txt
-python -m pip install -e .  # Install project in editable mode
+python -m pip install -e .
 ```
 
 ### 3. Configure Environment
 
 ```bash
-echo “AUDD_API_KEY=your_audd_io_key_here” > .env 
-echo “FLASK_ENV=development” >> .env
+echo "AUDD_API_KEY=your_audd_io_key_here" > .env
+echo "DATABASE_URI=sqlite:///catalogue.db" > .env
+echo "GATEWAY_HOST=localhost" > .env
+echo "GATEWAY_PORT=8000" > .env
 ```
 
 ## Running Services
 
-### Option 1: Individual Services
-
 ```bash
-flask --app services.catalogue.app run -p 5000
-flask --app services.recognition.app run -p 5001
-```
-
-### Option 2: Gateway (All Services)
-
-```bash
-gunicorn gateway:application
+python gateway.py
 ```
 
 ## Specificaiton
